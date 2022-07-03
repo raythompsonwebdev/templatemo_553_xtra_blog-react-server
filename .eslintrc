@@ -1,0 +1,71 @@
+{
+  "env": {
+      "browser": true, // Browser global variables like `window` etc.
+      "es6": true, // Enable all ECMAScript 6 features except for modules.
+      "jest": true, // Jest global variables like `it` etc.
+      "node": true // Defines things like process.env when generating through node
+  },
+  "extends": [
+      "airbnb",
+      "react-app",
+      "eslint:recommended",
+      "plugin:jsx-a11y/recommended",
+      "plugin:jest/recommended",
+      "plugin:import/recommended",
+      "plugin:prettier/recommended"
+  ],
+  "parserOptions": {
+      "requireConfigFile": false,
+      "ecmaFeatures": {
+        "globalReturn": false
+        
+      },
+      "babelOptions": {
+        "configFile": "./babel.config.json"
+      },
+      "ecmaVersion": 2020, // Allows for the parsing of modern ECMAScript features
+      "sourceType": "module" // Allows for the use of imports
+  },
+  "globals": {
+    "Atomics": "readonly",
+    "SharedArrayBuffer": "readonly"
+  },
+  "plugins": ["prettier" , "import", "jsx-a11y"],
+  "root": true, // For configuration cascading.
+  "parser": "@babel/eslint-parser", // Uses babel-eslint transforms.
+  "rules": {
+      "react/jsx-filename-extension": [1, { "extensions": [".js", ".jsx"] }],
+      "strict" : ["error","global"],
+      "prefer-destructuring":["error",{"array":true, "object":true},{"enforceForRenamedProperties":true}],
+      "new-cap": "error",
+      "no-invalid-this": "error",
+      "prefer-const":"error",
+      "func-style":["error", "declaration"],
+      "no-new-func":"error",
+      "prettier/prettier": "error",
+      "no-unused-vars": "warn",
+      "no-console": "warn",
+      "func-names": "warn",
+      "no-process-exit": "warn",
+      "object-shorthand": "warn",
+      "class-methods-use-this": "error",
+      "no-param-reassign": "error",
+      "no-var": "error",
+      "prefer-arrow-callback": "warn",
+      "prefer-rest-params": "warn",
+      "arrow-parens": ["error", "always"],
+      "arrow-body-style": ["error", "as-needed"],
+      "no-eval":"error",
+      "no-implied-eval":"error",
+      "eqeqeq":"error",
+      "no-with":"error",
+      "no-plusplus":"error",
+      "react-hooks/rules-of-hooks": "error",
+      "react-hooks/exhaustive-deps": "warn"
+  },
+  "settings": {
+    "react": {
+        "version": "detect" // Detect react version
+    }
+  }
+}
