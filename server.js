@@ -5,12 +5,12 @@ import home from "./routes/home.js";
 import createPost from "./routes/createPost.js";
 import deletePost from "./routes/deletePost.js";
 import updatePost from "./routes/updatePost.js";
-import post from "./routes/post.js";
+import getPost from "./routes/getPost.js";
 import logoutUser from "./routes/logoutUser.js";
 import loginUser from "./routes/loginUser.js";
 import registerUser from "./routes/registerUser.js";
 import path from "path";
-import {fileURLToPath} from 'url';
+import { fileURLToPath } from "url";
 //import bodyParser from "body-parser";
 
 //set up file paths for static files - updated
@@ -24,8 +24,8 @@ const server = express();
 const PORT = process.env.PORT || 3333;
 
 //cors options
-const corsOptions = {credentials:false, origin:process.env.URL || "*"};
-server.use(cors(corsOptions))
+const corsOptions = { credentials: false, origin: process.env.URL || "*" };
+server.use(cors(corsOptions));
 
 // cookie parser
 server.use(cookieParser("alongrandomstringnobodyelseknows"));
@@ -43,35 +43,35 @@ const staticHandler = express.static(path.join(__dirname, "public"));
 server.use(staticHandler);
 
 // this is for images folder on path images
-const staticImages = express.static(path.join(__dirname, "public/images"));
+const staticImages = express.static(path.join(__dirname, "public/static/img"));
 server.use(staticImages);
 
 //display blog posts
-server.get("/posts", home);
+server.get("/api/posts", home);
 
 // get single blog post
-server.get("/posts/:id", post);
+server.get("/api/post/:id", getPost);
 
 //delete blog post
-server.post("/posts/:id", deletePost);
+server.post("/api//posts/:id", deletePost);
 
 // create blog post
-server.post("/create-post", createPost);
+server.post("/api//create-post", createPost);
 
 // update single blog post
-server.put("/update-post", updatePost);
+server.put("/api//update-post", updatePost);
 
 // login login route
-server.post("/login", loginUser.post);
+server.post("/api//login", loginUser.post);
 
 // login logout route
-server.post("/logout", logoutUser.get);
+server.post("/api//logout", logoutUser.get);
 
 // register user route
-server.post("/register-user", registerUser.post);
+server.post("/api//register-user", registerUser.post);
 
 // get users route
-server.get("/users", registerUser.get);
+server.get("/api//users", registerUser.get);
 
 //error handling
 server.use((request, response) => {
