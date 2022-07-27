@@ -1,4 +1,5 @@
 import express from "express";
+import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import home from "./routes/home.js";
@@ -10,8 +11,11 @@ import logoutUser from "./routes/logoutUser.js";
 import loginUser from "./routes/loginUser.js";
 import registerUser from "./routes/registerUser.js";
 import path from "path";
+//import { dirname,join } from 'path';
 import { fileURLToPath } from "url";
 //import bodyParser from "body-parser";
+
+dotenv.config();
 
 //set up file paths for static files - updated
 const __filename = fileURLToPath(import.meta.url);
@@ -27,13 +31,14 @@ const PORT = process.env.PORT || 3333;
 const corsOptions = { credentials: false, origin: process.env.URL || "*" };
 server.use(cors(corsOptions));
 
+server.use(express.json());
+
 // cookie parser
 server.use(cookieParser("alongrandomstringnobodyelseknows"));
 
 //Middleware - bodyparser setup updated
 const bodyParser = express.urlencoded({ extended: false });
 server.use(bodyParser);
-server.use(express.json());
 // bodyparser old setup
 //server.use(bodyParser.urlencoded({ extended: true }));
 //server.use(bodyParser.json());

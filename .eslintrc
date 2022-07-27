@@ -10,7 +10,6 @@
       "react-app",
       "eslint:recommended",
       "plugin:jsx-a11y/recommended",
-      "plugin:jest/recommended",
       "plugin:import/recommended",
       "plugin:prettier/recommended"
   ],
