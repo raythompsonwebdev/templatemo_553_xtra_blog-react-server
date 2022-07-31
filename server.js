@@ -10,10 +10,9 @@ import getPost from "./routes/getPost.js";
 import logoutUser from "./routes/logoutUser.js";
 import loginUser from "./routes/loginUser.js";
 import registerUser from "./routes/registerUser.js";
+import searchPost from "./routes/searchPost.js";
 import path from "path";
-//import { dirname,join } from 'path';
 import { fileURLToPath } from "url";
-//import bodyParser from "body-parser";
 
 dotenv.config();
 
@@ -31,14 +30,16 @@ const PORT = process.env.PORT || 3333;
 const corsOptions = { credentials: false, origin: process.env.URL || "*" };
 server.use(cors(corsOptions));
 
+// Method to use json
 server.use(express.json());
 
 // cookie parser
 server.use(cookieParser("alongrandomstringnobodyelseknows"));
 
-//Middleware - bodyparser setup updated
+//Middleware - bodyparser setup updated - also to use
 const bodyParser = express.urlencoded({ extended: false });
 server.use(bodyParser);
+
 // bodyparser old setup
 //server.use(bodyParser.urlencoded({ extended: true }));
 //server.use(bodyParser.json());
@@ -48,23 +49,26 @@ const staticHandler = express.static(path.join(__dirname, "public"));
 server.use(staticHandler);
 
 // this is for images folder on path images
-const staticImages = express.static(path.join(__dirname, "public/static/img"));
+const staticImages = express.static(path.join(__dirname, "public/static/"));
 server.use(staticImages);
 
 //display blog posts
 server.get("/api/posts", home);
 
+//display blog posts
+server.get("/api/posts", searchPost);
+
 // get single blog post
 server.get("/api/post/:id", getPost);
 
 //delete blog post
-server.post("/api//posts/:id", deletePost);
+server.post("/api//post/:id", deletePost);
 
 // create blog post
 server.post("/api//create-post", createPost);
 
 // update single blog post
-server.put("/api//update-post", updatePost);
+server.put("/api/update-post", updatePost);
 
 // login login route
 server.post("/api//login", loginUser.post);
