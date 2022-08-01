@@ -2,7 +2,7 @@ import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
 import cookieParser from "cookie-parser";
-import home from "./routes/home.js";
+import getAllPost from "./routes/getAllPost.js";
 import createPost from "./routes/createPost.js";
 import deletePost from "./routes/deletePost.js";
 import updatePost from "./routes/updatePost.js";
@@ -30,15 +30,15 @@ const PORT = process.env.PORT || 3333;
 const corsOptions = { credentials: false, origin: process.env.URL || "*" };
 server.use(cors(corsOptions));
 
-// Method to use json
-server.use(express.json());
-
 // cookie parser
 server.use(cookieParser("alongrandomstringnobodyelseknows"));
 
 //Middleware - bodyparser setup updated - also to use
 const bodyParser = express.urlencoded({ extended: false });
 server.use(bodyParser);
+
+// Method to use json
+server.use(express.json());
 
 // bodyparser old setup
 //server.use(bodyParser.urlencoded({ extended: true }));
@@ -52,23 +52,23 @@ server.use(staticHandler);
 const staticImages = express.static(path.join(__dirname, "public/static/"));
 server.use(staticImages);
 
-//display blog posts
-server.get("/api/posts", home);
+//display all blog posts
+server.get("/api/posts", getAllPost.get);
 
-//display blog posts
-server.get("/api/posts", searchPost);
+//display searched blog posts
+server.get("/api/posts", searchPost.get);
 
 // get single blog post
 server.get("/api/post/:id", getPost);
 
-//delete blog post
-server.post("/api//post/:id", deletePost);
+//delete single blog post
+server.post("/api//post/:id", deletePost.post);
 
-// create blog post
-server.post("/api//create-post", createPost);
+// create single blog post
+server.post("/api//create-post", createPost.post);
 
 // update single blog post
-server.put("/api/update-post", updatePost);
+server.put("/api/update-post", updatePost.post);
 
 // login login route
 server.post("/api//login", loginUser.post);
