@@ -1,25 +1,20 @@
-import db from "../database/connection.js";
+import express from "express";
+import jwt from "jsonwebtoken";
+import pool from "../database/connection.js";
 import bcrypt from "bcrypt";
-import bcrypt from "bcrypt";
-//import { jwtTokens } from '../utils/jwt-helpers.js';
+import { jwtTokens } from "../utils/jwt-helpers.js";
 
 const router = express.Router();
 
-async function post(req, res) {
-  //const sid = crypto.randomBytes(18).toString("base64");
-
+router.post("/login", async (req, res) => {
   try {
-    //console.log(req.cookies, req.get('origin'));
-
     const { email, hashpassword } = req.body;
 
     const hashedPassword = await bcrypt.hash(hashpassword, 10);
 
-    //const users = await db.query('SELECT * FROM users WHERE email = $1', [email]);
-
-    const users = await db.query(
-      "INSERT INTO users (user_name,user_email,user_password) VALUES ($1,$2,$3) RETURNING *",
-      [req.body.name, req.body.email, hashedPassword]
+    const users = await pool.query(
+      "INSERT INTO users user_email,user_password) VALUES ($1,$2,$3) RETURNING *",
+      [req.body.email, hashedPassword]
     );
 
     if (users.rows.length === 0)
@@ -40,7 +35,6 @@ async function post(req, res) {
     };
 
     //jwt token
-    //JWT
     let tokens = jwtTokens(users.rows[0]); //Gets access and refresh tokens
     res.cookie("refresh_token", tokens.refreshToken, {
       ...(process.env.COOKIE_DOMAIN && { domain: process.env.COOKIE_DOMAIN }),
@@ -48,25 +42,14 @@ async function post(req, res) {
       sameSite: "none",
       secure: true,
     });
+    // return jwt token
     res.json(tokens);
-
-    // //cookie test
-    // res.cookie("sid", userInfo, {
-    //   httpOnly: true,
-    //   maxAge: 1000 * 60, // 60,000ms (60s)
-    //   sameSite: "lax",
-    //   signed: true,
-    // });
-    //console.log(req.cookies);
-    //console.log(req.signedCookies);
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
+});
 
-  res.redirect("/posts");
-}
-
-async function get(req, res) {
+router.get("/refresh_token", (req, res) => {
   try {
     const refreshToken = req.cookies.refresh_token;
     console.log(req.cookies);
@@ -91,15 +74,15 @@ async function get(req, res) {
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
-}
+});
 
-async function deleteToken(req, res) {
+router.delete("/refresh_token", (req, res) => {
   try {
     res.clearCookie("refresh_token");
     return res.status(200).json({ message: "Refresh token deleted." });
   } catch (error) {
     res.status(401).json({ error: error.message });
   }
-}
+});
 
-export default { post, get, deleteToken };
+export default router;

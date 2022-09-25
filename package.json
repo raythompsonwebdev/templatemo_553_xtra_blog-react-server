@@ -1,7 +1,7 @@
 {
   "name": "blog-project",
   "version": "1.0.0",
-  "description": "",
+  "description": "blog project",
   "main": "server.js",
   "type": "module",
   "scripts": {

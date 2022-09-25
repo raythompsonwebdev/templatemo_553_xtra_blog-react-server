@@ -1,6 +1,6 @@
-import db  from "../database/connection.js";
+import db from "../database/connection.js";
 
-export default function post(request, response) {
+export default function updatePost(request, response) {
   const { id, name, blogtitle, blogpost, category, submitted } = request.body;
   db.query(
     ` 
@@ -19,4 +19,3 @@ export default function post(request, response) {
 
   response.redirect("/posts");
 }
-

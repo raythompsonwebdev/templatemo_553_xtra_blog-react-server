@@ -2,13 +2,11 @@
 // import bcrypt from "bcrypt";
 // import crypto from "crypto";
 
-function get(req, res) {  
-
+function logoutUser(req, res) {
   const sid = req.signedCookies.sid;
   delete sessions[sid];
   res.clearCookie("sid");
   res.redirect("/posts");
-
 }
 
-export default {get};
+export default logoutUser;

@@ -1,6 +1,6 @@
 import db from "../database/connection.js";
 
-export default function get(request, response) {
+export default function searchPost(request, response) {
   try {
     db.query("SELECT * FROM blogposter", (error, results) => {
       if (error) {

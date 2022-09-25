@@ -7,11 +7,9 @@ import bcrypt from "bcrypt";
 async function post(request, response) {
   try {
     const { username, email, hashpassword, datesubmitted } = request.body;
-
     const saltRounds = 10;
     const salt = bcrypt.genSaltSync(saltRounds);
     const hashedPassword = bcrypt.hashSync(hashpassword, salt);
-
     const newUser = await db.query(
       `INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES ($1, $2, $3, $4)`,
       [username, email, hashedPassword, datesubmitted]

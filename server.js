@@ -8,8 +8,10 @@ import deletePost from "./routes/deletePost.js";
 import updatePost from "./routes/updatePost.js";
 import getPost from "./routes/getPost.js";
 import logoutUser from "./routes/logoutUser.js";
-import loginUser from "./routes/loginUser.js";
 import registerUser from "./routes/registerUser.js";
+//import loginUser from "./routes/loginUser.js";
+//import usersRouter from "./routes/users-routes.js";
+//import authRouter from "./routes/auth-routes.js";
 import searchPost from "./routes/searchPost.js";
 import path from "path";
 import { fileURLToPath } from "url";
@@ -30,19 +32,15 @@ const PORT = process.env.PORT || 3333;
 const corsOptions = { credentials: false, origin: process.env.URL || "*" };
 server.use(cors(corsOptions));
 
+// Method to use json
+server.use(express.json());
+
 // cookie parser
-server.use(cookieParser("alongrandomstringnobodyelseknows"));
+server.use(cookieParser());
 
 //Middleware - bodyparser setup updated - also to use
 const bodyParser = express.urlencoded({ extended: false });
 server.use(bodyParser);
-
-// Method to use json
-server.use(express.json());
-
-// bodyparser old setup
-//server.use(bodyParser.urlencoded({ extended: true }));
-//server.use(bodyParser.json());
 
 // serve static files
 const staticHandler = express.static(path.join(__dirname, "public"));
@@ -53,34 +51,35 @@ const staticImages = express.static(path.join(__dirname, "public/static/"));
 server.use(staticImages);
 
 //display all blog posts
-server.get("/api/posts", getAllPost.get);
+server.get("/api/posts", getAllPost);
 
 //display searched blog posts
-server.get("/api/posts", searchPost.get);
+server.get("/api/posts", searchPost);
 
 // get single blog post
 server.get("/api/post/:id", getPost);
 
 //delete single blog post
-server.post("/api//post/:id", deletePost.post);
+server.post("/api//post/:id", deletePost);
 
 // create single blog post
-server.post("/api//create-post", createPost.post);
+server.post("/api//create-post", createPost);
 
 // update single blog post
-server.put("/api/update-post", updatePost.post);
+server.put("/api/update-post", updatePost);
 
 // login login route
-server.post("/api//login", loginUser.post);
+//server.post("/api//login", loginUser.post);
 
 // login logout route
-server.post("/api//logout", logoutUser.get);
+server.post("/api/logoutUser", logoutUser);
 
 // register user route
-server.post("/api//register-user", registerUser.post);
+server.post("/api/registeruser", registerUser.post);
 
-// get users route
-server.get("/api//users", registerUser.get);
+//auth routes
+//server.use("/api/auth", authRouter); //login
+//server.use("/api/users", usersRouter); // users
 
 //error handling
 server.use((request, response) => {
