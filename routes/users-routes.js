@@ -3,10 +3,21 @@ import pool from "../database/connection.js";
 import bcrypt from "bcrypt";
 import { authenticateToken } from "../middleware/authorization.js";
 import { jwtTokens } from "../utils/jwt-helpers.js";
+import rateLimit from "express-rate-limit";
 
 let refreshTokens = [];
 
 const router = express.Router();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply the rate limiting middleware to all requests
+router.use(limiter);
 
 /* GET users listing. */
 router.get("/", authenticateToken, async (req, res) => {
