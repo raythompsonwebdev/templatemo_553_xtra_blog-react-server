@@ -15,6 +15,7 @@ import registerUser from "./routes/registerUser.js";
 import searchPost from "./routes/searchPost.js";
 import path from "path";
 import { fileURLToPath } from "url";
+import rateLimit from "express-rate-limit";
 
 dotenv.config();
 
@@ -24,6 +25,16 @@ const __dirname = path.dirname(__filename);
 
 //express server
 const server = express();
+
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
+  standardHeaders: true, // Return rate limit info in the `RateLimit-*` headers
+  legacyHeaders: false, // Disable the `X-RateLimit-*` headers
+});
+
+// Apply the rate limiting middleware to all requests
+server.use(limiter);
 
 //port
 const PORT = process.env.PORT || 3333;
