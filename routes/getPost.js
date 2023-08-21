@@ -1,15 +1,14 @@
-import db from "../database/connection.js";
+import dbConnect from '../database/sql-connection.js'
 
-export default function getPost(request, response) {
-  try {
-    // convert string to number
-    const id = parseInt(request.params.id);
+const getPost = (request, response) => {
 
-    db.query("SELECT * FROM blogposter WHERE id = $1", [id]).then((result) => {
-      const postItem = result.rows[0];
-      response.send(postItem);
-    });
-  } catch (err) {
-    response.status(500).json({ error: err.message });
-  }
+  const id = parseInt(request.params.id);
+
+  dbConnect.query(`SELECT * FROM blogpost WHERE id = ${id}`, (err, result, fields) => {
+    if (err) response.status(500).json({ error: err.message });
+    response.send(result);
+  });
+
 }
+
+export default getPost

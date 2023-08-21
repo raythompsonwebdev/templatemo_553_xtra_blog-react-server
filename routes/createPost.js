@@ -1,18 +1,14 @@
-import db from "../database/connection.js";
+import dbConnect from '../database/sql-connection.js'
 
-export default function createPost(request, response) {
+const createPost = (request, response) => {
   const { author, blogtitle, blogpost, category, submitted } = request.body;
-  db.query(
-    `INSERT INTO blogposter(author, blogtitle, blogpost, submitted) VALUES ($1, $2, $3, $4)`,
-    [author, blogtitle, blogpost, category, submitted]
-  )
-    .then((data) => {
-      console.log(data);
-    })
-    .catch((error) => {
-      response.status(500).json({ error: error.message });
-      // do stuff with the error here
+  dbConnect.query(
+    `INSERT INTO blogposter(author, blogtitle, blogpost, submitted) VALUES (${author}, ${blogtitle}, ${blogpost}, ${submitted})`,
+    (err, result, fields) => {
+      if (err) response.status(500).json({ error: err.message });
+      response.send(result);
     });
-
-  response.redirect("http://localhost:3000");
+  response.redirect("http://localhost:3000");  
 }
+
+export default createPost

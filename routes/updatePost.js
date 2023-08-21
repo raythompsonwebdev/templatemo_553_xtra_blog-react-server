@@ -1,21 +1,27 @@
-import db from "../database/connection.js";
+import dbConnect from '../database/sql-connection.js'
 
-export default function updatePost(request, response) {
+const updatePost = (request, response) => {
   const { id, name, blogtitle, blogpost, category, submitted } = request.body;
-  db.query(
-    ` 
+
+  dbConnect.query(    ` 
       UPDATE blogposter 
-      SET name = $2, 
-      SET blogtitle = $3, 
-      SET blogpost = $4, 
-      SET category = $5, 
-      SET date = $6
-      WHERE id = $1
-    `,
-    [name, blogtitle, blogpost, category, submitted]
-  ).then((data) => {
-    console.log(data);
-  });
+      SET name = ${name}, 
+      SET blogtitle = ${blogtitle}, 
+      SET blogpost = ${blogpost}, 
+      SET category = ${category}, 
+      SET date = ${submitted}
+      WHERE id = ${id}
+    `,(err, result, fields) => {
+      console.log(fields)
+      if (err) response.status(500).json({ error: err.message });
+      console.log(result);
+      response.send(result);
+    });
+
 
   response.redirect("/posts");
+
+
 }
+
+export default updatePost;
