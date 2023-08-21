@@ -16,3 +16,5 @@ routes/loginUser.js
 routes/registerUser.js
 routes/user-routes.js
 routes/logoutUser.js
+middleware/
+utils/
