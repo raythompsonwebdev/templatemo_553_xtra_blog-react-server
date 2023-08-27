@@ -6,7 +6,6 @@ const getAllPost = (request, response) => {
       if (err) response.status(500).json({ error: err.message });
       response.send(result);
     });
-
  
 }
 

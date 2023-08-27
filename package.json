@@ -6,8 +6,9 @@
   "type": "module",
   "scripts": {
     "test": "cypress open",
-    "dev": "nodemon server.js --exec babel-node",
-    "start": "node server.js"
+    "dev": "nodemon ./server.js --exec babel-node -e js",
+    "start": "node server.js",
+    "debug": "DEBUG=express:* nodemon ./server.js --exec babel-node -e js"
   },
   "keywords": [],
   "author": "",
