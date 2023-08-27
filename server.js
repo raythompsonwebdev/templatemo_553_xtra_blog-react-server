@@ -1,10 +1,10 @@
 import express from "express";
 import dotenv from "dotenv";
 import cors from "cors";
-// import cookieParser from "cookie-parser";
 import bodyParser from 'body-parser';
 import path from "path";
 import { fileURLToPath } from "url";
+import session from 'express-session'
 // import rateLimit from "express-rate-limit";
 import getAllPost from "./routes/getAllPost.js";
 import createPost from "./routes/createPost.js";
@@ -12,12 +12,11 @@ import deletePost from "./routes/deletePost.js";
 import updatePost from "./routes/updatePost.js";
 import getPost from "./routes/getPost.js";
 import searchPost from "./routes/searchPost.js";
-//import logoutUser from "./routes/logoutUser.js";
 import registerUser from "./routes/registerUser.js";
+//import logoutUser from "./routes/logoutUser.js";
 //import loginUser from "./routes/loginUser.js";
 //import usersRouter from "./routes/users-routes.js";
 //import authRouter from "./routes/auth-routes.js";
-
 
 dotenv.config();
 
@@ -42,15 +41,13 @@ const server = express();
 const PORT = process.env.PORT || 3333;
 
 //cors options
-const corsOptions = { origin: process.env.URL || "*" };
+const corsOptions = { 
+  origin: [process.env.URL],
+  methods:["GET", "POST"],
+  credentials:true
+};
 
 server.use(cors(corsOptions));
-
-// Method to use json
-// server.use(express.json());
-
-// cookie parser
-// server.use(cookieParser());
 
 // for parsing application/json
 server.use(bodyParser.json());
@@ -59,9 +56,6 @@ server.use(bodyParser.json());
 server.use(bodyParser.urlencoded({ extended: true })); 
 //form-urlencoded
 
-//Middleware - bodyparser setup updated - also to use
-// const bodyParser = express.urlencoded({ extended: false });
-// server.use(bodyParser);
 
 // serve static files
 const staticHandler = express.static(path.join(__dirname, "public"));
@@ -89,14 +83,17 @@ server.post("/api//create-post", createPost);
 // update single blog post
 server.put("/api/update-post", updatePost);
 
+// register user route
+server.post("/api/registeruser", registerUser);
+
+// register user route
+server.get("/api/search", searchPost);
+
 // login login route
 //server.post("/api//login", loginUser.post);
 
 // login logout route
 //server.post("/api/logoutUser", logoutUser);
-
-// register user route
-server.post("/api/registeruser", registerUser);
 
 //auth routes
 //server.use("/api/auth", authRouter); //login
