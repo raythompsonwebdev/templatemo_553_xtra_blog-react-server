@@ -13,15 +13,14 @@ const registerUser = async (request, response) => {
       
   const saltRounds = 10;
   const salt = bcrypt.genSaltSync(saltRounds);
+  const hashedPassword = await hashPassword(password, salt);
 
-  const hashedPassword = hashPassword(password, salt);
-
-  console.log(username, email, hashedPassword, submitted)
-    
+  // console.log(username, email, hashedPassword, submitted)    
 
   dbConnect.execute(`INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES(?, ?, ?, ?)`,[username, email, hashedPassword, submitted], (err, result) => {
     if (err) response.status(500).json({ error: `RegisterUser :${err.message}` });
-      console.log("1 record inserted", result);
+      console.log("record inserted", result);
+      return response.json({status: "success"})
     
   });
   

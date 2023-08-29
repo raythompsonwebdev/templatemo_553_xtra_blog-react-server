@@ -12,7 +12,6 @@ middleware/
 utils/
 mysql-files/
 routes/auth-routes.js
-routes/loginUser.js
 routes/user-routes.js
 routes/logoutUser.js
 middleware/

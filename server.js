@@ -4,7 +4,9 @@ import cors from "cors";
 import bodyParser from 'body-parser';
 import path from "path";
 import { fileURLToPath } from "url";
+import cookieParser from "cookie-parser";
 import session from 'express-session'
+import {verifyJwt} from './utils/jwt-helpers.js'
 // import rateLimit from "express-rate-limit";
 import getAllPost from "./routes/getAllPost.js";
 import createPost from "./routes/createPost.js";
@@ -13,10 +15,8 @@ import updatePost from "./routes/updatePost.js";
 import getPost from "./routes/getPost.js";
 import searchPost from "./routes/searchPost.js";
 import registerUser from "./routes/registerUser.js";
+import loginUser from "./routes/loginUser.js";
 //import logoutUser from "./routes/logoutUser.js";
-//import loginUser from "./routes/loginUser.js";
-//import usersRouter from "./routes/users-routes.js";
-//import authRouter from "./routes/auth-routes.js";
 
 dotenv.config();
 
@@ -40,6 +40,8 @@ const server = express();
 //port
 const PORT = process.env.PORT || 3333;
 
+server.use(cookieParser());
+
 //cors options
 const corsOptions = { 
   origin: [process.env.URL],
@@ -52,10 +54,22 @@ server.use(cors(corsOptions));
 // for parsing application/json
 server.use(bodyParser.json());
 
+
 // for parsing application/xwww-
 server.use(bodyParser.urlencoded({ extended: true })); 
 //form-urlencoded
 
+server.use(
+  session({
+    key: "userId",
+    secret: "suntzuronin",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      expires: 60 * 60 * 24,
+    },
+  })
+);
 
 // serve static files
 const staticHandler = express.static(path.join(__dirname, "public"));
@@ -64,6 +78,7 @@ server.use(staticHandler);
 // // this is for images folder on path images
 const staticImages = express.static(path.join(__dirname, "public/images"));
 server.use(staticImages);
+
 
 //display all blog posts
 server.get("/api/posts", getAllPost);
@@ -89,15 +104,14 @@ server.post("/api/registeruser", registerUser);
 // register user route
 server.get("/api/search", searchPost);
 
-// login login route
-//server.post("/api//login", loginUser.post);
+// login user route
+server.post("/api/login", loginUser.post);
+
+// user profile route
+server.get("/api/profile", loginUser.get);
 
 // login logout route
 //server.post("/api/logoutUser", logoutUser);
-
-//auth routes
-//server.use("/api/auth", authRouter); //login
-//server.use("/api/users", usersRouter); // users
 
 //error handling
 // server.use((request, response) => {
