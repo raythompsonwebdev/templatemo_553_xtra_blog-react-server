@@ -6,7 +6,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 import session from 'express-session'
-import {verifyJwt} from './utils/jwt-helpers.js'
+// import {verifyJwt} from './utils/jwt-helpers.js'
 // import rateLimit from "express-rate-limit";
 import getAllPost from "./routes/getAllPost.js";
 import createPost from "./routes/createPost.js";
@@ -18,15 +18,6 @@ import registerUser from "./routes/registerUser.js";
 import loginUser from "./routes/loginUser.js";
 //import logoutUser from "./routes/logoutUser.js";
 
-dotenv.config();
-
-//set up file paths for static files - updated
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-//express server
-const server = express();
-
 // const limiter = rateLimit({
 //   windowMs: 15 * 60 * 1000, // 15 minutes
 //   max: 100, // Limit each IP to 100 requests per `window` (here, per 15 minutes)
@@ -37,14 +28,31 @@ const server = express();
 // // Apply the rate limiting middleware to all requests
 // server.use(limiter);
 
+dotenv.config();
+
+//set up file paths for static files - updated
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+//express server
+const server = express();
+
 //port
 const PORT = process.env.PORT || 3333;
 
-server.use(cookieParser());
-
+// Cross Origin Resource Sharing
+// const whitelist = [process.env.URL , 'http://127.0.0.1'];
 //cors options
 const corsOptions = { 
-  origin: [process.env.URL],
+  // origin: (origin, callback) => {
+  //   if (whitelist.indexOf(origin) !== -1 || !origin) {
+  //       callback(null, true)
+  //   } else {
+  //       callback(new Error('Not allowed by CORS'));
+  //   }
+  // },
+  // optionsSuccessStatus: 200,
+  origin:[process.env.URL , 'http://127.0.0.1'],
   methods:["GET", "POST"],
   credentials:true
 };
@@ -54,15 +62,17 @@ server.use(cors(corsOptions));
 // for parsing application/json
 server.use(bodyParser.json());
 
+server.use(cookieParser());
 
 // for parsing application/xwww-
-server.use(bodyParser.urlencoded({ extended: true })); 
 //form-urlencoded
+server.use(bodyParser.urlencoded({ extended: true })); 
+
 
 server.use(
   session({
     key: "userId",
-    secret: "suntzuronin",
+    secret: process.env.SECRET,
     resave: false,
     saveUninitialized: false,
     cookie: {
