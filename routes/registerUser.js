@@ -1,36 +1,29 @@
-import db from "../database/connection.js";
+import dbConnect from '../database/sql-connection.js'
 import bcrypt from "bcrypt";
-//import {authenticateToken} from '../middleware/authorization.js';
-//import { jwtTokens } from '../utils/jwt-helpers.js';
-//let refreshTokens = [];
 
-async function post(request, response) {
-  try {
-    const { username, email, hashpassword, datesubmitted } = request.body;
-    const saltRounds = 10;
-    const salt = bcrypt.genSaltSync(saltRounds);
-    const hashedPassword = bcrypt.hashSync(hashpassword, salt);
-    const newUser = await db.query(
-      `INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES ($1, $2, $3, $4)`,
-      [username, email, hashedPassword, datesubmitted]
-    );
-
-    response.json({ users: newUser.rows[0] });
-  } catch (err) {
-    response.status(500).json({ error: err.message });
-  }
-
-  //response.redirect("http://localhost:3000");
+async function hashPassword(plaintextPassword) {
+  const hash = await bcrypt.hash(plaintextPassword, 12)
+  // Store hash in the database
+  return hash
 }
 
-//router.get("/users", async (req,res) =>{
-async function get(req, res) {
-  try {
-    const users = await db.query("SELECT * from users");
-    res.json({ users: users.rows });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+const registerUser = async (request, response) => {
+
+  const { username, email, password, submitted } = request.body;
+      
+  const saltRounds = 10;
+  const salt = bcrypt.genSaltSync(saltRounds);
+  const hashedPassword = await hashPassword(password, salt);
+
+  // console.log(username, email, hashedPassword, submitted)    
+
+  dbConnect.execute(`INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES(?, ?, ?, ?)`,[username, email, hashedPassword, submitted], (err, result) => {
+    if (err) response.status(500).json({ error: `RegisterUser :${err.message}` });
+      console.log("record inserted", result);
+      return response.json({status: "success"})
+    
+  });
+  
 }
 
-export default { post, get };
+export default registerUser;

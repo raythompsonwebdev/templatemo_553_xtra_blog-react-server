@@ -1,17 +1,14 @@
-import db from "../database/connection.js";
+import dbConnect from '../database/sql-connection.js'
 
-export default function getAllPost(request, response) {
-  try {
-    db.query("SELECT * FROM blogposter", (error, results) => {
-      if (error) {
-        throw error;
-      } else {
-        const posts = results.rows;
+const getAllPost = (request, response) => {
 
-        response.send(posts);
-      }
+dbConnect.query("SELECT * FROM blogpost", (err, result) => {
+      if (err) response.status(500).json({ error: err.message });
+      response.send(result);
     });
-  } catch (err) {
-    response.status(500).json({ error: err.message });
-  }
+
+ 
+ 
 }
+
+export default getAllPost

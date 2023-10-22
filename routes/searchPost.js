@@ -1,17 +1,16 @@
-import db from "../database/connection.js";
+import dbConnect from '../database/sql-connection.js'
 
-export default function searchPost(request, response) {
-  try {
-    db.query("SELECT * FROM blogposter", (error, results) => {
-      if (error) {
-        throw error;
-      } else {
-        const posts = results.rows;
+const searchPost = (request, response) => { 
 
-        response.send(posts);
-      }
+  const {query} = request.query;
+
+  console.log(query)
+  
+  dbConnect.execute(`SELECT * FROM blogpost WHERE blogtitle = ?`,[query], (err, result) => {
+  if (err) response.status(500).json({ error: err.message });
+      console.log(result);
     });
-  } catch (err) {
-    response.status(500).json({ error: err.message });
-  }
+  
 }
+
+export default searchPost
