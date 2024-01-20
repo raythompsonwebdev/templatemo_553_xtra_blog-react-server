@@ -25,26 +25,53 @@ Built using Node and Express. Database connection to MySQL Database.
 - [Babel](https://babeljs.io/)
 - [Typescript](https://www.typescriptlang.org/)
 
+## Prerequisites
+
+This is an example of how to list things you need to use the software and how to install them.
+
+- npm
+  ```sh
+  npm install npm@latest -g
+  ```
+
+## Installation
+
+Clone the repo
+
+```sh
+git clone git@github.com:raythompsonwebdev/templatemo_553_xtra_blog-react-server.git
+```
+
 ## Usage
 
-Install packages :
+Install NPM packages :
 
-`npm install`
-
-### or
-
-`yarn install`
+```sh
+npm install
+```
 
 ### or
 
-`pnpm install`
+```sh
+yarn install
+```
+
+### or
+
+```sh
+pnpm install
+```
 
 Once packages have been down loaded , To start server:
 
-`npm run dev`
+```sh
+npm run dev
+```
 
 Run start to view application build for production usage.
 
-`npm run start`
+```sh
+npm run start
+```
 
 PLEASE NOTE : templatemo_553_xtra_blog-react-server is backend server for templatemo_553_xtra_blog-react-client found at my other respository templatemo_553_xtra_blog-react-client. Or you can create your own client.
