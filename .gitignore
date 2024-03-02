@@ -6,13 +6,7 @@ cypress/
 
 .env
 data/
-database/connection.js
-database/sql-connection.js
-middleware/
-utils/
-mysql-files/
-routes/auth-routes.js
-routes/user-routes.js
-routes/logoutUser.js
-middleware/
-utils/
+src/database/connection.js
+middleware/authorization.js
+
+
