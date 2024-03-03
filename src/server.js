@@ -17,6 +17,7 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 
 //express server
 const server = express();
+server.use(express.json());
 
 // Cross Origin Resource Sharing
 const whitelist = [process.env.URL, "http://localhost:5173"];
@@ -45,9 +46,6 @@ blogroutes(server);
 
 // Apply the rate limiting middleware to all requests
 server.use(limiter);
-
-// for parsing application/json
-server.use(bodyParser.json());
 
 // for parsing cookies
 server.use(cookieParser());

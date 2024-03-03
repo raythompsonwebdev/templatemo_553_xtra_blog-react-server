@@ -115,30 +115,51 @@ const blogroutes = (server) => {
   });
 
   // register user route
-  server.post("/api/register_user", (req, res) => {
-    // const { username, email, password, submitted } = request.body;
+  server.post("/api/register_user", async (request, response) => {
+    const { username, email, hashpassword, submitted } = request.body;
 
-    console.log(req.body);
+    // check if username or email already exists
+    dbConnect.query("SELECT * FROM users", (err, result) => {
+      if (err) response.status(500).json({ error: err.message });
 
-    // const saltRounds = 10;
-    // const salt = bcrypt.genSaltSync(saltRounds);
-    // const hashedPassword = await hashPassword(password, salt);
+      const existingUser = result.filter(
+        (userExist) => userExist.username === username
+      );
 
-    // dbConnect.execute(
-    //   `INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES(?, ?, ?, ?)`,
-    //   [username, email, hashedPassword, submitted],
-    //   (err, result) => {
-    //     if (err)
-    //       response.status(500).json({ error: `RegisterUser :${err.message}` });
-    //     console.log("record inserted", result);
-    //     return response.json({ status: "success" });
-    //   }
-    // );
+      if (existingUser.length > 0) {
+        console.log("user already exists");
+      }
+
+      const existingEmail = result.filter(
+        (emailExist) => emailExist.email === email
+      );
+
+      if (existingEmail.length > 0) console.log("email already exists");
+
+      console.log(existingUser[0].username, existingEmail[0].email);
+    });
+
+    const saltRounds = 10;
+    const salt = bcrypt.genSaltSync(saltRounds);
+    const hashedPassword = await hashPassword(hashpassword, salt);
+
+    dbConnect.execute(
+      `INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES(?, ?, ?, ?)`,
+      [username, email, hashedPassword, submitted],
+      (err, result) => {
+        if (err) {
+          response.status(500).json({ error: `RegisterUser :${err.message}` });
+        } else {
+          console.log("record inserted", result);
+          response.json({ status: "success" });
+        }
+      }
+    );
   });
 
   // login user route
-  server.post("/api/login", async (req, res) => {
-    const { username, password } = req.body;
+  server.post("/api/login", async (request, response) => {
+    const { username, password } = request.body;
 
     dbConnect.query(
       "SELECT * FROM users WHERE username = ? ",
@@ -155,16 +176,16 @@ const blogroutes = (server) => {
           );
 
           if (!validPassword)
-            return res.status(401).json({ error: "Incorrect password" });
+            return response.status(401).json({ error: "Incorrect password" });
 
           req.session.username = result[0].username;
 
-          //console.log(`${result.length} record found`);
-          return res
+          console.log(`${result.length} record found`);
+          return response
             .status(200)
             .json({ message: `${result.length} record found` });
         } else {
-          res.status(401).json({ message: "User doesn't exist" });
+          response.status(401).json({ message: "User doesn't exist" });
         }
       }
     );
