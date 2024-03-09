@@ -108,13 +108,19 @@ const blogroutes = (server) => {
         (userExist) => userExist.username === username
       );
 
-      if (existingUser.length > 0) console.log("user already exists");
+      if (existingUser.length > 0) {
+        response.status(400);
+        throw new Error("user already exists");
+      }
 
       const existingEmail = result.filter(
         (emailExist) => emailExist.email === email
       );
 
-      if (existingEmail.length > 0) console.log("email already exists");
+      if (existingEmail.length > 0) {
+        response.status(400);
+        throw new Error("email already exists");
+      }
     });
 
     const hashedPassword = await hashPassword(hashpassword);
@@ -155,11 +161,15 @@ const blogroutes = (server) => {
             return response.status(401).json({ error: "Incorrect password" });
           }
 
-          const userInfo = { user_id: result[0].user_id };
+          const userInfo = {
+            user_id: result[0].user_id,
+            username: result[0].username,
+            email: result[0].email,
+          };
 
           generateToken(response, userInfo); //generate token and signed cookie
 
-          response.status(200).json(request.signedCookies);
+          response.status(200).json({ message: "User found" });
         } else {
           response.status(401).json({ message: "User doesn't exist" });
         }
@@ -168,7 +178,7 @@ const blogroutes = (server) => {
   });
 
   // login user route
-  server.get("/api/logout", async (request, response) => {
+  server.post("/api/logout", async (request, response) => {
     response.cookie("jwt", "", {
       httpOnly: true,
       expires: new Date(0),
@@ -176,7 +186,7 @@ const blogroutes = (server) => {
 
     return response
       .status(200)
-      .json({ loggedIn: false, message: "user not authenticated" });
+      .json({ loggedIn: false, message: "user logged out" });
   });
 
   // user profile route
@@ -194,6 +204,7 @@ const blogroutes = (server) => {
       return response.json({
         loggedIn: true,
         message: "user authenticated",
+        token: verToke,
       });
     }
   });

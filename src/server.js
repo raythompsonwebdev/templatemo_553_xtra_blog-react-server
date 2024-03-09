@@ -20,7 +20,7 @@ const server = express();
 server.use(express.json());
 
 // for parsing cookies
-server.use(cookieParser("raymondfdfdafgfgfgfdgf"));
+server.use(cookieParser(process.env.COOKIE_SECRET));
 
 // Cross Origin Resource Sharing
 const whitelist = [process.env.URL, "http://localhost:5173"];
