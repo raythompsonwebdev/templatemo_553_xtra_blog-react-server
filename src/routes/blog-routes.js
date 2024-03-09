@@ -58,17 +58,38 @@ const blogroutes = (server) => {
   });
 
   // create single blog post
-  server.post("/api//add_post", async (request, response) => {
-    const { author, blogtitle, blogpost, mood, submitted, categoryId } =
-      request.body;
-    dbConnect.query(
-      `INSERT INTO blogposter(author, blogtitle, blogpost, submitted) VALUES (${author}, ${blogtitle}, ${blogpost}, ${mood}, ${submitted}, ${categoryId})`,
+  server.post("/api/add_post", async (request, response) => {
+    const {
+      author,
+      username,
+      blogtitle,
+      blogpost,
+      mood,
+      submitted,
+      blogimage,
+      category_id,
+      user_id,
+    } = request.body;
+
+    dbConnect.execute(
+      `INSERT INTO blogpost (author, username, blogtitle, blogpost, mood , submitted, blogimage, category_id, user_id) VALUES( ?,?,?,?,?,?,?,?,?)`,
+      [
+        author,
+        username,
+        blogtitle,
+        blogpost,
+        mood,
+        submitted,
+        blogimage,
+        category_id,
+        user_id,
+      ],
       (err, result, fields) => {
         if (err) response.status(500).json({ error: err.message });
-        response.send(result);
+        console.log(result, fields);
       }
     );
-    response.redirect("http://localhost:3000");
+    //
   });
 
   // update single blog post
@@ -209,6 +230,12 @@ const blogroutes = (server) => {
 
   // update user profile
   // server.post("/api/update_profile", async (request, response) => {});
+
+  // get comments
+  // server.get("/api/comments", async (request, response) => {});
+
+  // post comments
+  // server.post("/api/comments", async (request, response) => {});
 };
 
 export default blogroutes;
