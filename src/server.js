@@ -6,7 +6,7 @@ import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
-import session from "express-session";
+//import session from "express-session";
 import rateLimit from "express-rate-limit";
 //set up file paths for static files - updated
 const __filename = fileURLToPath(import.meta.url);
@@ -18,6 +18,9 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 //express server
 const server = express();
 server.use(express.json());
+
+// for parsing cookies
+server.use(cookieParser("raymondfdfdafgfgfgfdgf"));
 
 // Cross Origin Resource Sharing
 const whitelist = [process.env.URL, "http://localhost:5173"];
@@ -41,41 +44,33 @@ const limiter = rateLimit({
   legacyHeaders: false, // Disable the `X-RateLimit-*` headers
 });
 
-// routes
-blogroutes(server);
-
 // Apply the rate limiting middleware to all requests
 server.use(limiter);
 
-// for parsing cookies
-server.use(cookieParser());
+// routes
+blogroutes(server);
 
 // for parsing application/xwww-form-urlencoded
 server.use(bodyParser.urlencoded({ extended: true }));
 
 //
-server.use(
-  session({
-    key: "userId",
-    secret: process.env.SECRET,
-    resave: false,
-    saveUninitialized: false,
-    cookie: {
-      expires: 60 * 60 * 24,
-    },
-  })
-);
+// server.use(
+//   session({
+//     key: "userId",
+//     secret: process.env.SECRET,
+//     resave: false,
+//     saveUninitialized: false,
+//     cookie: {
+//       expires: 60 * 60 * 24,
+//     },
+//   })
+// );
 
 // serve static files
 const staticHandler = express.static(path.join(__dirname, "public"));
 server.use(staticHandler);
 
-// Error handling function
-// server.use((err, req, res, next) => {
-//   console.error(err.stack);
-//   res.status(500).send(`Red alert! Red alert!: ${err.stack}`);
-// });
-
+// Error handler
 server.use(notFound);
 server.use(errorHandler);
 

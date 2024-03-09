@@ -1,26 +1,8 @@
 import dbConnect from "../database/sql-connection.js";
-// import { signJwtAccessToken, verifyJwt } from "../utils/jwt-helpers.js";
-import bcrypt from "bcrypt";
-
-async function hashPassword(plaintextPassword) {
-  const hash = await bcrypt.hash(plaintextPassword, 12);
-  // Store hash in the database
-  return hash;
-}
-
-async function comparePassword(plaintextPassword, hash) {
-  const result = await bcrypt.compare(plaintextPassword, hash);
-  return result;
-}
-
-// async function deleteToken(req, res) {
-//   try {
-//     res.clearCookie("refresh_token");
-//     return res.status(200).json({ message: "Refresh token deleted." });
-//   } catch (error) {
-//     res.status(401).json({ error: error.message });
-//   }
-// }
+import { generateToken, verifyJwt } from "../utils/JWT/generateToken.js";
+import { hashPassword, comparePassword } from "../utils/EncryptPassword.js";
+import dotenv from "dotenv";
+dotenv.config();
 
 const blogroutes = (server) => {
   //display all blog posts
@@ -120,39 +102,33 @@ const blogroutes = (server) => {
 
     // check if username or email already exists
     dbConnect.query("SELECT * FROM users", (err, result) => {
-      if (err) response.status(500).json({ error: err.message });
+      // if (err) response.status(500).json({ error: err.message });
 
       const existingUser = result.filter(
         (userExist) => userExist.username === username
       );
 
-      if (existingUser.length > 0) {
-        console.log("user already exists");
-      }
+      if (existingUser.length > 0) console.log("user already exists");
 
       const existingEmail = result.filter(
         (emailExist) => emailExist.email === email
       );
 
       if (existingEmail.length > 0) console.log("email already exists");
-
-      console.log(existingUser[0].username, existingEmail[0].email);
     });
 
-    const saltRounds = 10;
-    const salt = bcrypt.genSaltSync(saltRounds);
-    const hashedPassword = await hashPassword(hashpassword, salt);
+    const hashedPassword = await hashPassword(hashpassword);
 
     dbConnect.execute(
       `INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES(?, ?, ?, ?)`,
       [username, email, hashedPassword, submitted],
       (err, result) => {
-        if (err) {
-          response.status(500).json({ error: `RegisterUser :${err.message}` });
-        } else {
-          console.log("record inserted", result);
-          response.json({ status: "success" });
-        }
+        if (err)
+          response.status(401).json({ error: `RegisterUser :${err.message}` });
+
+        !result
+          ? console.log("No record inserted")
+          : console.log("record inserted", result);
       }
     );
   });
@@ -175,15 +151,15 @@ const blogroutes = (server) => {
             result[0].hashpassword
           );
 
-          if (!validPassword)
+          if (!validPassword) {
             return response.status(401).json({ error: "Incorrect password" });
+          }
 
-          req.session.username = result[0].username;
+          const userInfo = { user_id: result[0].user_id };
 
-          console.log(`${result.length} record found`);
-          return response
-            .status(200)
-            .json({ message: `${result.length} record found` });
+          generateToken(response, userInfo); //generate token and signed cookie
+
+          response.status(200).json(request.signedCookies);
         } else {
           response.status(401).json({ message: "User doesn't exist" });
         }
@@ -191,19 +167,39 @@ const blogroutes = (server) => {
     );
   });
 
-  // user profile route
-  server.get("/api/user", async (req, res, next) => {
-    console.log("Cookies: ", req.cookies);
-    // const { token } = req.cookies;
-    // if (!token) {
-    //   return res.json({ loggedIn: false, message: "user not authenticated" });
-    // } else {
-    //   const verToke = verifyJwt(token);
-    //   console.log(`token verified : ${verToke}`);
-    //   return res.json({ loggedIn: true });
-    // }
-    // next();
+  // login user route
+  server.get("/api/logout", async (request, response) => {
+    response.cookie("jwt", "", {
+      httpOnly: true,
+      expires: new Date(0),
+    });
+
+    return response
+      .status(200)
+      .json({ loggedIn: false, message: "user not authenticated" });
   });
+
+  // user profile route
+  server.get("/api/profile", async (request, response) => {
+    const { jwt } = request.signedCookies;
+
+    if (!jwt) {
+      return response.status(401).json({
+        loggedIn: false,
+        message: "user not authenticated",
+      });
+    } else {
+      const verToke = verifyJwt(jwt);
+      console.log(`token verified : ${verToke}`);
+      return response.json({
+        loggedIn: true,
+        message: "user authenticated",
+      });
+    }
+  });
+
+  // update user profile
+  // server.post("/api/update_profile", async (request, response) => {});
 };
 
 export default blogroutes;

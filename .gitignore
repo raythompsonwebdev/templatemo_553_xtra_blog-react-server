@@ -7,6 +7,8 @@ cypress/
 .env
 data/
 src/database/connection.js
-middleware/authorization.js
+src/middleware/authToken.js
+utils/generateToken.js
+utils/jwt-helper.js
 
 
