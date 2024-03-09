@@ -102,15 +102,14 @@ const blogroutes = (server) => {
 
     // check if username or email already exists
     dbConnect.query("SELECT * FROM users", (err, result) => {
-      // if (err) response.status(500).json({ error: err.message });
+      if (err) response.status(500).json({ error: err.message });
 
       const existingUser = result.filter(
         (userExist) => userExist.username === username
       );
 
       if (existingUser.length > 0) {
-        response.status(400);
-        throw new Error("user already exists");
+        console.log("user already exists");
       }
 
       const existingEmail = result.filter(
@@ -118,8 +117,7 @@ const blogroutes = (server) => {
       );
 
       if (existingEmail.length > 0) {
-        response.status(400);
-        throw new Error("email already exists");
+        console.log("email already exists");
       }
     });
 
