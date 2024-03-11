@@ -6,7 +6,7 @@ cypress/
 
 .env
 data/
-src/database/connection.js
+src/database/pg-connection.js
 src/middleware/authToken.js
 utils/generateToken.js
 utils/jwt-helper.js

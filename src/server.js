@@ -1,6 +1,5 @@
 import express from "express";
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 import cors from "cors";
 import bodyParser from "body-parser";
 import path from "path";
@@ -8,12 +7,13 @@ import { fileURLToPath } from "url";
 import cookieParser from "cookie-parser";
 //import session from "express-session";
 import rateLimit from "express-rate-limit";
-//set up file paths for static files - updated
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 //routes
 import blogroutes from "./routes/blog-routes.js";
 import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
+
+//set up file paths for static files - updated
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 //express server
 const server = express();

@@ -1,8 +1,7 @@
 import dbConnect from "../database/sql-connection.js";
 import { generateToken, verifyJwt } from "../utils/JWT/generateToken.js";
 import { hashPassword, comparePassword } from "../utils/EncryptPassword.js";
-import dotenv from "dotenv";
-dotenv.config();
+import "dotenv/config";
 
 const blogroutes = (server) => {
   //display all blog posts
@@ -232,10 +231,27 @@ const blogroutes = (server) => {
   // server.post("/api/update_profile", async (request, response) => {});
 
   // get comments
-  // server.get("/api/comments", async (request, response) => {});
+  server.get("/api/comments", async (request, response) => {
+    dbConnect.query("SELECT * FROM comments", (err, result) => {
+      if (err) response.status(500).json({ error: err.message });
+
+      response.send(result);
+    });
+  });
 
   // post comments
-  // server.post("/api/comments", async (request, response) => {});
+  server.post("/api/comments", async (request, response) => {
+    const { username, email, message, date } = request.body;
+
+    dbConnect.execute(
+      `INSERT INTO comments (username, email, message, date) VALUES(?,?,?,?)`,
+      [username, email, message, date],
+      (err, result, fields) => {
+        if (err) response.status(500).json({ error: err.message });
+        console.log(result, fields);
+      }
+    );
+  });
 };
 
 export default blogroutes;
