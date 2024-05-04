@@ -8,15 +8,19 @@ Built using Node and Express. Database connection to MySQL Database.
 
 ## Features
 
-- JWT Tokens (in progress)
-- Connection to MySQL database
+- User Registration and Login
+- Add Comments (In Progress)
+- Create Blogs (In Progress)
 
 ## Tools
 
 - [MySQL](https://www.mysql.com/)
-- [Bcrypt](https://www.npmjs.com/package/bcrypt)
-- [Express-Rate-Limiter](https://www.npmjs.com/package/express-rate-limit)
 - [MySQL2](https://www.npmjs.com/package/mysql2)
+- [BCrypt](https://www.npmjs.com/package/bcrypt)
+- [Cookie Parser](https://www.npmjs.com/package/cookie-parser)
+- [JS Cookie](https://www.npmjs.com/package/js-cookie)
+- [JSON Web Tokens](https://jwt.io/introduction)
+- [Express-Rate-Limiter](https://www.npmjs.com/package/express-rate-limit)
 - [DotEnv](https://www.npmjs.com/package/dotenv)
 - [Prettier](https://prettier.io/)
 - [Eslint](https://eslint.org/)
