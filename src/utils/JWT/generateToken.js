@@ -1,10 +1,21 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 
-const generateToken = (res, userId) => {
-  const token = jwt.sign(userId, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "30d",
-  });
+const generateToken = (res, userInfo) => {
+  const token = jwt.sign(
+    userInfo,
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "30d",
+    },
+    (err, token) => {
+      if (err) {
+        return res.status(401).send(err);
+      }
+
+      res.status(200).json({ token });
+    }
+  );
 
   res.cookie("jwt", token, {
     httpOnly: true,
