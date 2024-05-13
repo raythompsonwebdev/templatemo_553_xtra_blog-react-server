@@ -1,5 +1,5 @@
 import dbConnect from "../database/sql-connection.js";
-import { verifyJwt } from "../utils/JWT/generateToken.js";
+// import { verifyJwt } from "../utils/JWT/generateToken.js";
 import { hashPassword, comparePassword } from "../utils/EncryptPassword.js";
 import jwt from "jsonwebtoken";
 import "dotenv/config";
@@ -216,11 +216,62 @@ const blogroutes = (server) => {
       .json({ loggedIn: false, message: "user logged out" });
   });
 
+  server.put("/api/users/:userId", async (req, res) => {
+    const { authorization } = req.headers;
+    const { userId } = req.params;
+
+    const updates = (({ favoriteFood, hairColor, bio }) => ({
+      favoriteFood,
+      hairColor,
+      bio,
+    }))(req.body);
+
+    if (!authorization) {
+      return res.status(401).json({ message: "No authorization header sent" });
+    }
+
+    const token = authorization.split(" ")[1];
+
+    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+      if (err)
+        return res.status(401).json({ message: "Unable to verify token" });
+
+      const { id } = decoded;
+
+      if (id !== userId)
+        return res
+          .status(403)
+          .json({ message: "Not allowed to update that user's data" });
+
+      const db = getDbConnection("react-auth-db");
+      const result = await db
+        .collection("users")
+        .findOneAndUpdate(
+          { _id: ObjectID(id) },
+          { $set: { info: updates } },
+          { returnOriginal: false }
+        );
+      const { email, isVerified, info } = result.value;
+
+      jwt.sign(
+        { id, email, isVerified, info },
+        process.env.JWT_SECRET,
+        { expiresIn: "2d" },
+        (err, token) => {
+          if (err) {
+            return res.status(200).json(err);
+          }
+          res.status(200).json({ token });
+        }
+      );
+    });
+  });
+
   // user profile route
   server.get("/api/profile", async (request, response) => {
-    const { jwt } = request.signedCookies;
-
-    console.log(jwt);
+    console.log(response.body);
+    // const { jwt } = request.signedCookies;
+    // console.log(jwt);
 
     // if (!jwt) {
     //   return response.status(401).json({
@@ -236,10 +287,8 @@ const blogroutes = (server) => {
     //     token: verToke,
     //   });
     // }
+    response.status(200).send("loggedin");
   });
-
-  // update user profile
-  // server.post("/api/update_profile", async (request, response) => {});
 
   // get comments
   server.get("/api/comments", async (request, response) => {
