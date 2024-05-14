@@ -102,8 +102,8 @@ const blogroutes = (server) => {
 
     // check if username or email already exists
     const [checkUsername] = await dbConnect.query(
-      "SELECT * FROM users WHERE username = ?",
-      [username]
+      "SELECT * FROM users WHERE email = ?",
+      [email]
     );
 
     if (checkUsername.length > 0) {
@@ -112,25 +112,30 @@ const blogroutes = (server) => {
 
     const hashedPassword = await hashPassword(hashpassword);
 
+    const is_verified = false;
+    // INSERT INTO users (info) VALUES ('{"hairColor": "","favoriteFood": "","bio": ""}');
+    const startingInfo = '{"bio": "", "hairColor": "", "favoriteFood": ""}';
+
     const [result] = await dbConnect.execute(
-      `INSERT INTO users ( username, email, hashpassword, date_submitted) VALUES(?, ?, ?, ?)`,
-      [username, email, hashedPassword, submitted]
+      `INSERT INTO users ( username, email, hashpassword, date_submitted, is_verified, info) VALUES (?, ?, ?, ?, ?, ?)`,
+      [username, email, hashedPassword, submitted, is_verified, startingInfo]
     );
 
-    const { insertedId } = result;
+    const { insertId } = result;
 
-    const userInfo = {
-      user_id: insertedId,
-      username: username,
-      email: email,
-      isVerified: false,
-    };
+    console.log(result);
 
     jwt.sign(
-      userInfo,
+      {
+        user_id: insertId,
+        username,
+        email,
+        is_verified: false,
+        info: startingInfo,
+      },
       process.env.ACCESS_TOKEN_SECRET,
       {
-        expiresIn: "30d",
+        expiresIn: "2d",
       },
       (err, token) => {
         if (err) {
@@ -156,32 +161,32 @@ const blogroutes = (server) => {
   server.post("/api/login", async (request, response) => {
     const { email, password } = request.body;
 
-    const [result] = await dbConnect.query(
+    const [user] = await dbConnect.query(
       "SELECT * FROM users WHERE email = ? ",
       [email]
     );
 
-    console.log(result);
+    const { user_id, username, hashpassword, is_verified, info } = user[0];
 
-    if (result.length > 0) {
+    if (user.length > 0) {
       //PASSWORD CHECK - using sync method to compare - will try aync method
-      const validPassword = comparePassword(password, result[0].hashpassword);
+      const validPassword = comparePassword(password, hashpassword);
 
       if (!validPassword) {
         return response.status(401).json({ error: "Incorrect password" });
       }
 
-      const userInfo = {
-        user_id: result[0].user_id,
-        username: result[0].username,
-        email: result[0].email,
-      };
-
       jwt.sign(
-        userInfo,
+        {
+          user_id,
+          username,
+          email,
+          is_verified,
+          info,
+        },
         process.env.ACCESS_TOKEN_SECRET,
         {
-          expiresIn: "30d",
+          expiresIn: "2d",
         },
         (err, token) => {
           if (err) {
@@ -206,65 +211,75 @@ const blogroutes = (server) => {
 
   // login user route
   server.post("/api/logout", async (request, response) => {
-    response.cookie("jwt", "", {
-      httpOnly: true,
-      expires: new Date(0),
-    });
+    // response.cookie("jwt", "", {
+    //   httpOnly: true,
+    //   expires: new Date(0),
+    // });
 
     return response
       .status(200)
       .json({ loggedIn: false, message: "user logged out" });
   });
 
-  server.put("/api/users/:userId", async (req, res) => {
-    const { authorization } = req.headers;
-    const { userId } = req.params;
+  server.put("/api/users/:userId", async (request, response) => {
+    const { authorization } = request.headers;
+    const { userId } = request.params;
 
     const updates = (({ favoriteFood, hairColor, bio }) => ({
       favoriteFood,
       hairColor,
       bio,
-    }))(req.body);
+    }))(request.body);
 
     if (!authorization) {
-      return res.status(401).json({ message: "No authorization header sent" });
+      return response
+        .status(401)
+        .json({ message: "No authorization header sent" });
     }
 
     const token = authorization.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET, async (err, decoded) => {
+    jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, async (err, decoded) => {
       if (err)
-        return res.status(401).json({ message: "Unable to verify token" });
+        return response.status(401).json({ message: "Unable to verify token" });
 
-      const { id } = decoded;
+      const { user_id } = decoded;
 
-      if (id !== userId)
-        return res
+      console.log(decoded, user_id, userId);
+
+      if (user_id !== userId)
+        // console.log("Not allowed to update that user's data");
+        return response
           .status(403)
           .json({ message: "Not allowed to update that user's data" });
+    });
 
-      const db = getDbConnection("react-auth-db");
-      const result = await db
-        .collection("users")
-        .findOneAndUpdate(
-          { _id: ObjectID(id) },
-          { $set: { info: updates } },
-          { returnOriginal: false }
-        );
-      const { email, isVerified, info } = result.value;
+    const [result] = await dbConnect.query(
+      ` UPDATE users SET info = JSON_SET(info, "$.favoriteFood", "${updates.favoriteFood}", "$.hairColor", "${updates.hairColor}" ,"$.bio", "${updates.bio}") WHERE user_id = ${userId}
+        `
+    );
+
+    if (result.affectedRows > 0) {
+      const [updatedInfo] = await dbConnect.query(
+        `SELECT user_id, info, email, is_verified FROM users WHERE user_id = ${userId}`
+      );
+
+      // console.log(updatedInfo);
+
+      const { user_id, email, is_verified, info } = updatedInfo;
 
       jwt.sign(
-        { id, email, isVerified, info },
-        process.env.JWT_SECRET,
+        { user_id, email, is_verified, info },
+        process.env.ACCESS_TOKEN_SECRET,
         { expiresIn: "2d" },
         (err, token) => {
           if (err) {
-            return res.status(200).json(err);
+            return response.status(200).json(err);
           }
-          res.status(200).json({ token });
+          response.status(200).json({ token });
         }
       );
-    });
+    }
   });
 
   // user profile route
