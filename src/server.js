@@ -4,7 +4,7 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-import cookieParser from "cookie-parser";
+// import cookieParser from "cookie-parser";
 //import session from "express-session";
 import rateLimit from "express-rate-limit";
 //routes
@@ -20,7 +20,7 @@ const server = express();
 server.use(express.json());
 
 // for parsing cookies
-server.use(cookieParser(process.env.COOKIE_SECRET));
+// server.use(cookieParser(process.env.COOKIE_SECRET));
 
 // Cross Origin Resource Sharing
 const whitelist = [process.env.URL, "http://localhost:5173"];

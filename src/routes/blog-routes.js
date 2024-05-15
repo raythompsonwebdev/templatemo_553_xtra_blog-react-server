@@ -2,10 +2,71 @@ import dbConnect from "../database/sql-connection.js";
 // import { verifyJwt } from "../utils/JWT/generateToken.js";
 import { hashPassword, comparePassword } from "../utils/EncryptPassword.js";
 import jwt from "jsonwebtoken";
+import { v4 as uuid } from "uuid";
 import "dotenv/config";
+import { sendEmail } from "../utils/sendEmail.js";
 
 const blogroutes = (server) => {
+  // email verification
+  server.post("/api/test-email", async (requset, response) => {
+    try {
+      await sendEmail({
+        to: "raymond.thompson@raythompsonwebdev.co.uk",
+        from: "raymond.thompson@raythompsonwebdev.co.uk",
+        subject: "Does this work?",
+        text: "If you're reading this... yes!",
+      });
+      response.sendStatus(200);
+    } catch (e) {
+      console.log(e);
+      response.sendStatus(500);
+    }
+  });
+
+  server.post("/api/verify-email", async (req, response) => {
+    const { verificationString } = req.body;
+
+    // const result = await db.collection("users").findOne({
+    //   verificationString,
+    // });
+
+    const [result] = await dbConnect.query(
+      `SELECT * FROM users WHERE verfication_string = ${verificationString}`
+    );
+
+    if (!result)
+      return response
+        .status(401)
+        .json({ message: "The email verification code is incorrect" });
+
+    const { user_id, username, email, info } = result[0];
+
+    // await db.collection("users").updateOne(
+    //   { _id: ObjectID(id) },
+    //   {
+    //     $set: { is_verified: true },
+    //   }
+    // );
+
+    await dbConnect.execute(
+      `UPDATE users 
+       SET verification_string = ${verificationString}
+       WHERE user_id = ${user_id}`
+    );
+
+    jwt.sign(
+      { user_id, username, email, is_verified: true, info },
+      process.env.JWT_SECRET,
+      { expiresIn: "2d" },
+      (err, token) => {
+        if (err) return response.sendStatus(500);
+        response.status(200).json({ token });
+      }
+    );
+  });
+
   //display all blog posts
+
   server.get("/api/posts", async (request, response) => {
     const [result] = await dbConnect.query("SELECT * FROM blogpost");
     response.send(result);
@@ -62,18 +123,41 @@ const blogroutes = (server) => {
 
     const hashedPassword = await hashPassword(hashpassword);
 
+    const verificationString = uuid();
+
     const is_verified = false;
-    // INSERT INTO users (info) VALUES ('{"hairColor": "","favoriteFood": "","bio": ""}');
+
     const startingInfo = '{"bio": "", "hairColor": "", "favoriteFood": ""}';
 
     const [result] = await dbConnect.execute(
-      `INSERT INTO users ( username, email, hashpassword, date_submitted, is_verified, info) VALUES (?, ?, ?, ?, ?, ?)`,
-      [username, email, hashedPassword, submitted, is_verified, startingInfo]
+      `INSERT INTO users ( username, email, hashpassword, date_submitted, is_verified, info, verification_string) VALUES (?, ?, ?, ?, ?, ?, ?)`,
+      [
+        username,
+        email,
+        hashedPassword,
+        submitted,
+        is_verified,
+        startingInfo,
+        verificationString,
+      ]
     );
 
     const { insertId } = result;
 
-    console.log(result);
+    try {
+      await sendEmail({
+        to: email,
+        from: "raymond.thompson@raythompsonwebdev.co.uk",
+        subject: "Please verify your email",
+        text: `
+              Thanks for signing up! To verify your email, click here:
+              http://localhost:3000/verify-email/${verificationString}
+          `,
+      });
+    } catch (e) {
+      console.log(e);
+      response.sendStatus(500);
+    }
 
     jwt.sign(
       {
@@ -103,8 +187,6 @@ const blogroutes = (server) => {
     //   maxAge: 30 * 24 * 60 * 60 * 1000, // 30 days
     //   signed: true,
     // });
-
-    //response.status(200).json({ message: "user added" });
   });
 
   // login user route
@@ -119,7 +201,6 @@ const blogroutes = (server) => {
     const { user_id, username, hashpassword, is_verified, info } = user[0];
 
     if (user.length > 0) {
-      //PASSWORD CHECK - using sync method to compare - will try aync method
       const validPassword = comparePassword(password, hashpassword);
 
       if (!validPassword) {
@@ -195,13 +276,19 @@ const blogroutes = (server) => {
       if (err)
         return response.status(401).json({ message: "Unable to verify token" });
 
-      const { user_id } = decoded;
+      const { user_id, is_verified } = decoded;
 
       if (user_id !== updatedUserId)
         //  console.log("Not allowed to update that user's data");
         response
           .status(403)
           .json({ message: "Not allowed to update that user's data" });
+
+      if (!is_verified)
+        return response.status(403).json({
+          message:
+            "You need to verify your email before you can update your data",
+        });
 
       try {
         const [result] = await dbConnect.query(
