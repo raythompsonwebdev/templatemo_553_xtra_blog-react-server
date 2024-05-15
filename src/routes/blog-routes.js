@@ -193,7 +193,7 @@ const blogroutes = (server) => {
             return response.status(500).send(err);
           }
 
-          return response.status(200).json({ token, message: "User found" });
+          return response.status(200).json({ token, loggedIn: true });
         }
       );
 
@@ -225,10 +225,12 @@ const blogroutes = (server) => {
     const { authorization } = request.headers;
     const { userId } = request.params;
 
-    const updates = (({ favoriteFood, hairColor, bio }) => ({
-      favoriteFood,
-      hairColor,
+    const updatedUserId = parseInt(userId);
+
+    const updates = (({ bio, hairColor, favoriteFood }) => ({
       bio,
+      hairColor,
+      favoriteFood,
     }))(request.body);
 
     if (!authorization) {
@@ -245,64 +247,54 @@ const blogroutes = (server) => {
 
       const { user_id } = decoded;
 
-      console.log(decoded, user_id, userId);
-
-      if (user_id !== userId)
-        // console.log("Not allowed to update that user's data");
-        return response
+      if (user_id !== updatedUserId)
+        //  console.log("Not allowed to update that user's data");
+        response
           .status(403)
           .json({ message: "Not allowed to update that user's data" });
-    });
 
-    const [result] = await dbConnect.query(
-      ` UPDATE users SET info = JSON_SET(info, "$.favoriteFood", "${updates.favoriteFood}", "$.hairColor", "${updates.hairColor}" ,"$.bio", "${updates.bio}") WHERE user_id = ${userId}
-        `
-    );
+      try {
+        const [result] = await dbConnect.query(
+          ` UPDATE users 
+                SET info = JSON_SET(info, "$.bio", "${updates.bio}", "$.hairColor", "${updates.hairColor}", "$.favoriteFood", "${updates.favoriteFood}") WHERE user_id = "${updatedUserId}" `
+        );
 
-    if (result.affectedRows > 0) {
-      const [updatedInfo] = await dbConnect.query(
-        `SELECT user_id, info, email, is_verified FROM users WHERE user_id = ${userId}`
-      );
+        console.log(result);
 
-      // console.log(updatedInfo);
-
-      const { user_id, email, is_verified, info } = updatedInfo;
-
-      jwt.sign(
-        { user_id, email, is_verified, info },
-        process.env.ACCESS_TOKEN_SECRET,
-        { expiresIn: "2d" },
-        (err, token) => {
-          if (err) {
-            return response.status(200).json(err);
-          }
-          response.status(200).json({ token });
+        if (result.affectedRows !== 1) {
+          return response
+            .status(500)
+            .json({ message: "Failed to update user" });
         }
-      );
-    }
-  });
 
-  // user profile route
-  server.get("/api/profile", async (request, response) => {
-    console.log(response.body);
-    // const { jwt } = request.signedCookies;
-    // console.log(jwt);
+        const [updatedInfo] = await dbConnect.query(
+          `SELECT user_id, username, email, is_verified, info FROM users WHERE user_id = "${updatedUserId}"`
+        );
 
-    // if (!jwt) {
-    //   return response.status(401).json({
-    //     loggedIn: false,
-    //     message: "user not authenticated",
-    //   });
-    // } else {
-    //   const verToke = verifyJwt(jwt);
-    //   console.log(`token verified : ${verToke}`);
-    //   return response.json({
-    //     loggedIn: true,
-    //     message: "user authenticated",
-    //     token: verToke,
-    //   });
-    // }
-    response.status(200).send("loggedin");
+        const { username, email, is_verified, info } = updatedInfo[0];
+
+        console.log(user_id, username, email, is_verified, info);
+
+        jwt.sign(
+          { user_id, username, email, is_verified, info },
+          process.env.ACCESS_TOKEN_SECRET,
+          { expiresIn: "2d" },
+          (err, token) => {
+            if (err) {
+              return response
+                .status(500)
+                .json({ message: "Failed to generate token" });
+            }
+
+            console.log(token);
+            return response.status(200).json({ token, user: updatedInfo[0] });
+          }
+        );
+      } catch (error) {
+        console.error("Error updating user:", error);
+        return response.status(500).json({ message: "Internal server error" });
+      }
+    });
   });
 
   // get comments
