@@ -46,56 +46,6 @@ const blogroutes = (server) => {
     response.redirect("http://localhost:3000");
   });
 
-  // create single blog post
-  server.post("/api/add_post", async (request, response) => {
-    const {
-      author,
-      username,
-      blogtitle,
-      blogpost,
-      mood,
-      submitted,
-      blogimage,
-      category_id,
-      user_id,
-    } = request.body;
-
-    const [result] = await dbConnect.execute(
-      `INSERT INTO blogpost (author, username, blogtitle, blogpost, mood , submitted, blogimage, category_id, user_id) VALUES( ?,?,?,?,?,?,?,?,?)`,
-      [
-        author,
-        username,
-        blogtitle,
-        blogpost,
-        mood,
-        submitted,
-        blogimage,
-        category_id,
-        user_id,
-      ]
-    );
-    response.send(result);
-  });
-
-  // update single blog post
-  server.put("/api/update_post", async (request, response) => {
-    const { id, name, blogtitle, blogpost, category, submitted } = request.body;
-
-    const [result] = await dbConnect.query(
-      ` 
-        UPDATE blogposter 
-        SET name = ${name}, 
-        SET blogtitle = ${blogtitle}, 
-        SET blogpost = ${blogpost}, 
-        SET category = ${category}, 
-        SET date = ${submitted}
-        WHERE id = ${id}
-      `
-    );
-    response.send(result);
-    response.redirect("/posts");
-  });
-
   // register user route
   server.post("/api/register_user", async (request, response) => {
     const { username, email, hashpassword, submitted } = request.body;
@@ -259,8 +209,6 @@ const blogroutes = (server) => {
                 SET info = JSON_SET(info, "$.bio", "${updates.bio}", "$.hairColor", "${updates.hairColor}", "$.favoriteFood", "${updates.favoriteFood}") WHERE user_id = "${updatedUserId}" `
         );
 
-        console.log(result);
-
         if (result.affectedRows !== 1) {
           return response
             .status(500)
@@ -273,8 +221,6 @@ const blogroutes = (server) => {
 
         const { username, email, is_verified, info } = updatedInfo[0];
 
-        console.log(user_id, username, email, is_verified, info);
-
         jwt.sign(
           { user_id, username, email, is_verified, info },
           process.env.ACCESS_TOKEN_SECRET,
@@ -286,8 +232,7 @@ const blogroutes = (server) => {
                 .json({ message: "Failed to generate token" });
             }
 
-            console.log(token);
-            return response.status(200).json({ token, user: updatedInfo[0] });
+            response.status(200).json({ token });
           }
         );
       } catch (error) {
@@ -295,6 +240,56 @@ const blogroutes = (server) => {
         return response.status(500).json({ message: "Internal server error" });
       }
     });
+  });
+
+  // create single blog post
+  server.post("/api/add_post", async (request, response) => {
+    const {
+      author,
+      username,
+      blogtitle,
+      blogpost,
+      mood,
+      submitted,
+      blogimage,
+      category_id,
+      user_id,
+    } = request.body;
+
+    const [result] = await dbConnect.execute(
+      `INSERT INTO blogpost (author, username, blogtitle, blogpost, mood , submitted, blogimage, category_id, user_id) VALUES( ?,?,?,?,?,?,?,?,?)`,
+      [
+        author,
+        username,
+        blogtitle,
+        blogpost,
+        mood,
+        submitted,
+        blogimage,
+        category_id,
+        user_id,
+      ]
+    );
+    response.send(result);
+  });
+
+  // update single blog post
+  server.put("/api/update_post", async (request, response) => {
+    const { id, name, blogtitle, blogpost, category, submitted } = request.body;
+
+    const [result] = await dbConnect.query(
+      ` 
+        UPDATE blogposter 
+        SET name = ${name}, 
+        SET blogtitle = ${blogtitle}, 
+        SET blogpost = ${blogpost}, 
+        SET category = ${category}, 
+        SET date = ${submitted}
+        WHERE id = ${id}
+      `
+    );
+    response.send(result);
+    response.redirect("/posts");
   });
 
   // get comments
