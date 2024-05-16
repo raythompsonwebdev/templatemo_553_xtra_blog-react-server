@@ -23,8 +23,8 @@ const blogroutes = (server) => {
   });
 
   // veryfy email
-  server.put("/api/verify-email", async (req, response) => {
-    const { verificationString } = req.body;
+  server.put("/api/verify-email", async (request, response) => {
+    const { verificationString } = request.body;
 
     const [result] = await dbConnect.query(
       `SELECT * FROM users WHERE verification_string = "${verificationString}"`
@@ -55,6 +55,64 @@ const blogroutes = (server) => {
       }
     );
   });
+
+  // forgot password
+  server.put("/api/forgot-password/:email", async (req, res) => {
+    const { email } = req.params;
+
+    const passwordResetCode = uuid();
+
+    const [result] = await dbConnect.query(
+      `UPDATE users SET password_reset = "${passwordResetCode}" WHERE email = "${email}"`
+    );
+
+    console.log(result);
+
+    if (result.affectedRows > 0) {
+      try {
+        await sendEmail({
+          to: email,
+          from: "raymond.thompson@raythompsonwebdev.co.uk",
+          subject: "Password Reset",
+          text: `
+                    To reset your password, click this link:
+                    http://localhost:3000/reset-password/${passwordResetCode}
+                `,
+        });
+      } catch (e) {
+        console.log(e);
+        res.sendStatus(500);
+      }
+    }
+
+    res.sendStatus(200);
+  });
+
+  server.put(
+    "/api/users/:passwordResetCode/reset-password",
+    async (req, res) => {
+      const { passwordResetCode } = req.params;
+      const { newPassword } = req.body;
+
+      // const db = getDbConnection("react-auth-db");
+
+      const newPasswordHash = await hashPassword(newPassword);
+
+      const [result] = await dbConnect.query(
+        `UPDATE users SET hashpassword = "${newPasswordHash}" WHERE password_reset = "${passwordResetCode}"`
+      );
+
+      // console.log(result);
+
+      if (result.affectedRows === 0) return res.sendStatus(404);
+
+      await dbConnect.query(
+        `UPDATE users SET password_reset = "" WHERE password_reset = "${passwordResetCode}"`
+      );
+
+      res.sendStatus(200);
+    }
+  );
 
   //display all blog posts
   server.get("/api/posts", async (request, response) => {
