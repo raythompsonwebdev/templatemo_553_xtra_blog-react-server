@@ -1,5 +1,4 @@
 import dbConnect from "../database/sql-connection.js";
-// import { verifyJwt } from "../utils/JWT/generateToken.js";
 import { hashPassword, comparePassword } from "../utils/EncryptPassword.js";
 import jwt from "jsonwebtoken";
 import { v4 as uuid } from "uuid";
@@ -7,11 +6,11 @@ import "dotenv/config";
 import { sendEmail } from "../utils/sendEmail.js";
 
 const blogroutes = (server) => {
-  // email verification
-  server.post("/api/test-email", async (requset, response) => {
+  // email verification test
+  server.post("/api/test-email", async (request, response) => {
     try {
       await sendEmail({
-        to: "raymond.thompson@raythompsonwebdev.co.uk",
+        to: "webdesignbully@gmail.com",
         from: "raymond.thompson@raythompsonwebdev.co.uk",
         subject: "Does this work?",
         text: "If you're reading this... yes!",
@@ -23,15 +22,12 @@ const blogroutes = (server) => {
     }
   });
 
-  server.post("/api/verify-email", async (req, response) => {
+  // veryfy email
+  server.put("/api/verify-email", async (req, response) => {
     const { verificationString } = req.body;
 
-    // const result = await db.collection("users").findOne({
-    //   verificationString,
-    // });
-
     const [result] = await dbConnect.query(
-      `SELECT * FROM users WHERE verfication_string = ${verificationString}`
+      `SELECT * FROM users WHERE verification_string = "${verificationString}"`
     );
 
     if (!result)
@@ -41,22 +37,17 @@ const blogroutes = (server) => {
 
     const { user_id, username, email, info } = result[0];
 
-    // await db.collection("users").updateOne(
-    //   { _id: ObjectID(id) },
-    //   {
-    //     $set: { is_verified: true },
-    //   }
-    // );
-
-    await dbConnect.execute(
-      `UPDATE users 
-       SET verification_string = ${verificationString}
+    await dbConnect.query(
+      `UPDATE users
+       SET is_verified = "true"
        WHERE user_id = ${user_id}`
     );
 
+    // console.log(user_id, username, email, is_verified, info);
+
     jwt.sign(
       { user_id, username, email, is_verified: true, info },
-      process.env.JWT_SECRET,
+      process.env.ACCESS_TOKEN_SECRET,
       { expiresIn: "2d" },
       (err, token) => {
         if (err) return response.sendStatus(500);
@@ -66,13 +57,12 @@ const blogroutes = (server) => {
   });
 
   //display all blog posts
-
   server.get("/api/posts", async (request, response) => {
     const [result] = await dbConnect.query("SELECT * FROM blogpost");
     response.send(result);
   });
 
-  // register user route
+  // search route
   server.get("/api/search", async (request, response) => {
     const { query } = request.query;
 
@@ -143,6 +133,8 @@ const blogroutes = (server) => {
     );
 
     const { insertId } = result;
+
+    console.log(verificationString);
 
     try {
       await sendEmail({
@@ -252,6 +244,7 @@ const blogroutes = (server) => {
       .json({ loggedIn: false, message: "user logged out" });
   });
 
+  // update user info
   server.put("/api/users/:userId", async (request, response) => {
     const { authorization } = request.headers;
     const { userId } = request.params;
@@ -279,8 +272,7 @@ const blogroutes = (server) => {
       const { user_id, is_verified } = decoded;
 
       if (user_id !== updatedUserId)
-        //  console.log("Not allowed to update that user's data");
-        response
+        return response
           .status(403)
           .json({ message: "Not allowed to update that user's data" });
 
@@ -306,7 +298,7 @@ const blogroutes = (server) => {
           `SELECT user_id, username, email, is_verified, info FROM users WHERE user_id = "${updatedUserId}"`
         );
 
-        const { username, email, is_verified, info } = updatedInfo[0];
+        const { username, email, info } = updatedInfo[0];
 
         jwt.sign(
           { user_id, username, email, is_verified, info },
@@ -329,7 +321,7 @@ const blogroutes = (server) => {
     });
   });
 
-  // create single blog post
+  // create blog
   server.post("/api/add_post", async (request, response) => {
     const {
       author,
@@ -385,7 +377,7 @@ const blogroutes = (server) => {
     response.send(result);
   });
 
-  // post comments
+  // add comments
   server.post("/api/comments", async (request, response) => {
     const { username, email, message, date } = request.body;
 
