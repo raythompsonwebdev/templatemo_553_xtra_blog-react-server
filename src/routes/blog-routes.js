@@ -66,8 +66,6 @@ const blogroutes = (server) => {
       `UPDATE users SET password_reset = "${passwordResetCode}" WHERE email = "${email}"`
     );
 
-    console.log(result);
-
     if (result.affectedRows > 0) {
       try {
         await sendEmail({
@@ -192,8 +190,6 @@ const blogroutes = (server) => {
 
     const { insertId } = result;
 
-    console.log(verificationString);
-
     try {
       await sendEmail({
         to: email,
@@ -271,7 +267,9 @@ const blogroutes = (server) => {
         },
         (err, token) => {
           if (err) {
-            return response.status(500).send(err);
+            return response
+              .status(401)
+              .json({ message: "Unable to verify token" });
           }
 
           return response.status(200).json({ token, loggedIn: true });
@@ -432,7 +430,7 @@ const blogroutes = (server) => {
   // get comments
   server.get("/api/comments", async (request, response) => {
     const [result] = await dbConnect.query("SELECT * FROM comments");
-    response.send(result);
+    response.response.status(200).json(result);
   });
 
   // add comments

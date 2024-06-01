@@ -4,8 +4,6 @@ import cors from "cors";
 import bodyParser from "body-parser";
 import path from "path";
 import { fileURLToPath } from "url";
-// import cookieParser from "cookie-parser";
-//import session from "express-session";
 import rateLimit from "express-rate-limit";
 //routes
 import blogroutes from "./routes/blog-routes.js";
@@ -15,26 +13,14 @@ import { notFound, errorHandler } from "./middleware/errorMiddleware.js";
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+// port
+const PORT = process.env.PORT || 5000;
+
 //express server
 const server = express();
 server.use(express.json());
-
-// for parsing cookies
-// server.use(cookieParser(process.env.COOKIE_SECRET));
-
-// Cross Origin Resource Sharing
-const whitelist = [process.env.URL, "http://localhost:5173"];
-//cors options
-const corsOptions = {
-  origin: whitelist,
-  methods: ["GET", "POST"],
-  credentials: true,
-};
-
-server.use(cors(corsOptions));
-
-// port
-const PORT = process.env.PORT || 5000;
+// for parsing application/xwww-form-urlencoded
+server.use(bodyParser.urlencoded({ extended: true }));
 
 // limiter
 const limiter = rateLimit({
@@ -47,24 +33,19 @@ const limiter = rateLimit({
 // Apply the rate limiting middleware to all requests
 server.use(limiter);
 
+// Cross Origin Resource Sharing
+const whitelist = [process.env.URL, "http://localhost:5173"];
+//cors options
+const corsOptions = {
+  origin: whitelist,
+  methods: ["GET", "POST"],
+  credentials: true,
+};
+
+server.use(cors(corsOptions));
+
 // routes
 blogroutes(server);
-
-// for parsing application/xwww-form-urlencoded
-server.use(bodyParser.urlencoded({ extended: true }));
-
-//
-// server.use(
-//   session({
-//     key: "userId",
-//     secret: process.env.SECRET,
-//     resave: false,
-//     saveUninitialized: false,
-//     cookie: {
-//       expires: 60 * 60 * 24,
-//     },
-//   })
-// );
 
 // serve static files
 const staticHandler = express.static(path.join(__dirname, "public"));

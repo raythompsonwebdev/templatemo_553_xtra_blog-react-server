@@ -8,7 +8,7 @@ cypress/
 data/
 src/database/pg-connection.js
 src/middleware/authToken.js
-utils/generateToken.js
+src/utils/generateToken.js
 
 
 
