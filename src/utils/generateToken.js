@@ -1,10 +1,25 @@
 import "dotenv/config";
 import jwt from "jsonwebtoken";
 
-const generateToken = (res, userId) => {
-  const token = jwt.sign(userId, process.env.ACCESS_TOKEN_SECRET, {
-    expiresIn: "30d",
-  });
+const DEFAULT_SIGN_OPTION = {
+  expiresIn: "1h",
+};
+
+const generateToken = (res, userInfo) => {
+  const token = jwt.sign(
+    userInfo,
+    process.env.ACCESS_TOKEN_SECRET,
+    {
+      expiresIn: "30d",
+    },
+    (err, token) => {
+      if (err) {
+        return res.status(401).send(err);
+      }
+
+      res.status(200).json({ token });
+    }
+  );
 
   res.cookie("jwt", token, {
     httpOnly: true,
@@ -26,10 +41,6 @@ const verifyJwt = (token) => {
   }
 };
 
-const DEFAULT_SIGN_OPTION = {
-  expiresIn: "1h",
-};
-
 const signJwtAccessToken = (payload, options = DEFAULT_SIGN_OPTION) => {
   const secret_key = process.env.SECRET;
   const token = jwt.sign(payload, secret_key, options);
@@ -48,4 +59,21 @@ function jwtTokens({ user_id, user_name, user_email }) {
   return { accessToken, refreshToken };
 }
 
-export { generateToken, verifyJwt, signJwtAccessToken, jwtTokens };
+function authenticateToken(req, res, next) {
+  const authHeader = req.headers["authorization"]; //Bearer TOKEN
+  const token = authHeader && authHeader.split(" ")[1];
+  if (token == null) return res.status(401).json({ error: "Null token" });
+  jwt.verify(token, process.env.ACCESS_TOKEN_SECRET, (error, user) => {
+    if (error) return res.status(403).json({ error: error.message });
+    req.user = user;
+    next();
+  });
+}
+
+export {
+  generateToken,
+  verifyJwt,
+  signJwtAccessToken,
+  jwtTokens,
+  authenticateToken,
+};
